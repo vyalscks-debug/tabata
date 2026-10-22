@@ -1,0 +1,1940 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <title>tabata.</title>
+  <style>
+    /* -------------------------------------------------------------
+       TABATA - Self-Contained Minimalist Monochrome Design
+    ------------------------------------------------------------- */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      background: #f7f7f5;
+      color: #111111;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Pretendard", "Segoe UI", Roboto, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: stretch;
+    }
+
+    button, input, select {
+      font: inherit;
+      color: inherit;
+    }
+
+    button {
+      cursor: pointer;
+      background: transparent;
+      border: none;
+      outline: none;
+    }
+
+    /* Mobile Container Frame */
+    #app {
+      width: 100%;
+      max-width: 420px;
+      min-height: 100vh;
+      background: #ffffff;
+      border-left: 1px solid #ebebeb;
+      border-right: 1px solid #ebebeb;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      margin: 0 auto;
+      box-shadow: 0 0 30px rgba(0, 0, 0, 0.03);
+    }
+
+    /* Top Bar */
+    .app-header {
+      height: 52px;
+      padding: 0 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #eeeeec;
+      background: #ffffff;
+      position: sticky;
+      top: 0;
+      z-index: 20;
+    }
+
+    .brand {
+      font-size: 15px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      color: #111111;
+    }
+
+    .brand .dot {
+      color: #777777;
+    }
+
+    .header-sound-btn {
+      font-size: 10px;
+      font-weight: 500;
+      letter-spacing: 0.1em;
+      color: #777777;
+      border: 1px solid #e0e0dc;
+      padding: 5px 9px;
+      border-radius: 2px;
+      transition: all 0.15s;
+    }
+
+    .header-sound-btn:hover {
+      color: #111111;
+      border-color: #111111;
+    }
+
+    /* Tabs */
+    .nav-bar {
+      display: flex;
+      border-bottom: 1px solid #eeeeec;
+      background: #ffffff;
+    }
+
+    .nav-btn {
+      flex: 1;
+      padding: 12px 0 10px;
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.08em;
+      color: #999999;
+      text-align: center;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+    }
+
+    .nav-btn.active {
+      color: #111111;
+      font-weight: 600;
+      border-bottom-color: #111111;
+    }
+
+    /* Main Content Body */
+    .content-body {
+      flex: 1;
+      padding: 22px 20px 36px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .view-screen {
+      display: none;
+    }
+
+    .view-screen.active {
+      display: block;
+      animation: fadeIn 0.18s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(3px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =============================================================
+       TAB 1: TIMER
+    ============================================================= */
+    .session-meta-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 0 16px;
+      border-bottom: 1px solid #f0f0ee;
+      margin-bottom: 24px;
+    }
+
+    .meta-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .meta-col-label {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: #999999;
+    }
+
+    .meta-col-val {
+      font-size: 13px;
+      font-weight: 600;
+      color: #111111;
+    }
+
+    .meta-sep {
+      color: #dcdcd8;
+      font-size: 13px;
+    }
+
+    /* Circular Timer Stage */
+    .timer-stage {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 8px 0 28px;
+    }
+
+    .ring-box {
+      position: relative;
+      width: 240px;
+      height: 240px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .clock-gauge {
+      width: 100%;
+      height: 100%;
+      transform: rotate(-90deg);
+      display: block;
+    }
+
+    .gauge-track {
+      fill: none;
+      stroke: #f0f0ee;
+      stroke-width: 3.5;
+    }
+
+    .gauge-fill {
+      fill: none;
+      stroke: #111111;
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 741.4; /* 2 * PI * 118 */
+      stroke-dashoffset: 0;
+      transition: stroke-dashoffset 0.12s linear;
+    }
+
+    .timer-center {
+      position: absolute;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      width: 100%;
+    }
+
+    .phase-tag {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      padding: 3px 8px;
+      border: 1px solid #dcdcd8;
+      border-radius: 2px;
+      color: #666666;
+      margin-bottom: 8px;
+      background: #ffffff;
+      transition: all 0.2s;
+    }
+
+    .phase-tag.work {
+      border-color: #111111;
+      color: #ffffff;
+      background: #111111;
+    }
+
+    .phase-tag.rest {
+      border-color: #dcdcd8;
+      color: #666666;
+      background: #f7f7f5;
+    }
+
+    .phase-tag.cooldown {
+      border-color: #dcdcd8;
+      color: #666666;
+      background: #eeeeec;
+    }
+
+    .digits {
+      font-size: 58px;
+      font-weight: 300;
+      line-height: 1;
+      letter-spacing: -0.04em;
+      color: #111111;
+      font-variant-numeric: tabular-nums;
+      margin-bottom: 10px;
+    }
+
+    .next-hint {
+      font-size: 10px;
+      letter-spacing: 0.08em;
+      color: #999999;
+      font-weight: 500;
+    }
+
+    /* Controls */
+    .controls-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 28px;
+    }
+
+    .ctl-icon-btn {
+      width: 44px;
+      height: 44px;
+      border: 1px solid #e0e0dc;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #666666;
+      transition: all 0.15s;
+    }
+
+    .ctl-icon-btn:hover {
+      border-color: #111111;
+      color: #111111;
+      background: #fafaf9;
+    }
+
+    .ctl-main-btn {
+      width: 130px;
+      height: 44px;
+      background: #111111;
+      color: #ffffff;
+      border: 1px solid #111111;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s;
+    }
+
+    .ctl-main-btn:hover {
+      background: #2a2a28;
+    }
+
+    .ctl-main-btn.is-running {
+      background: #ffffff;
+      color: #111111;
+      border-color: #111111;
+    }
+
+    /* Routine summary bar */
+    .routine-summary-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 15px;
+      background: #f7f7f5;
+      border: 1px solid #eeeeec;
+      border-radius: 2px;
+    }
+
+    .summary-specs {
+      font-size: 11px;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: #666666;
+    }
+
+    .text-link-btn {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #111111;
+      text-decoration: underline;
+    }
+
+    /* =============================================================
+       TAB 2: SETTINGS
+    ============================================================= */
+    .screen-meta-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #999999;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eeeeec;
+    }
+
+    .settings-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .param-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 13px 0;
+      border-bottom: 1px solid #eeeeec;
+    }
+
+    .param-left {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .param-name {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      color: #111111;
+    }
+
+    .param-caption {
+      font-size: 10px;
+      color: #999999;
+    }
+
+    .param-right {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .step-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid #dcdcd8;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      color: #666666;
+      transition: all 0.15s;
+    }
+
+    .step-btn:hover {
+      border-color: #111111;
+      color: #111111;
+    }
+
+    .param-right input {
+      width: 44px;
+      height: 28px;
+      text-align: center;
+      border: 1px solid #e0e0dc;
+      border-radius: 2px;
+      background: #f7f7f5;
+      font-size: 13px;
+      font-weight: 600;
+      color: #111111;
+      outline: none;
+    }
+
+    .param-unit {
+      font-size: 11px;
+      color: #666666;
+      min-width: 22px;
+    }
+
+    /* Calculation row */
+    .calc-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 15px 0;
+      border-bottom: 1px solid #eeeeec;
+      margin-bottom: 22px;
+    }
+
+    .calc-label {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: #666666;
+    }
+
+    .calc-val {
+      font-size: 18px;
+      font-weight: 400;
+      letter-spacing: -0.01em;
+      color: #111111;
+    }
+
+    /* Presets */
+    .presets-block {
+      margin-bottom: 26px;
+    }
+
+    .block-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      color: #999999;
+      margin-bottom: 10px;
+    }
+
+    .preset-pill-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .preset-pill {
+      border: 1px solid #e0e0dc;
+      padding: 9px 11px;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 500;
+      color: #555555;
+      text-align: left;
+      transition: all 0.15s;
+      background: #ffffff;
+    }
+
+    .preset-pill:hover {
+      border-color: #111111;
+      color: #111111;
+      background: #f7f7f5;
+    }
+
+    .btn-solid-full {
+      width: 100%;
+      height: 46px;
+      background: #111111;
+      color: #ffffff;
+      border: 1px solid #111111;
+      border-radius: 2px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      transition: background 0.15s;
+    }
+
+    .btn-solid-full:hover {
+      background: #2a2a28;
+    }
+
+    /* =============================================================
+       TAB 3: CALENDAR / PROGRESS
+    ============================================================= */
+    .stats-simple-row {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding: 8px 0 16px;
+      border-bottom: 1px solid #eeeeec;
+      margin-bottom: 22px;
+    }
+
+    .stat-unit {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+
+    .stat-num {
+      font-size: 20px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      color: #111111;
+    }
+
+    .stat-desc {
+      font-size: 9px;
+      font-weight: 500;
+      letter-spacing: 0.12em;
+      color: #999999;
+    }
+
+    .stat-sep {
+      color: #dcdcd8;
+      font-size: 14px;
+    }
+
+    /* Minimal Calendar */
+    .minimal-calendar {
+      margin-bottom: 26px;
+      border: 1px solid #eeeeec;
+      border-radius: 2px;
+      padding: 15px;
+      background: #ffffff;
+    }
+
+    .cal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #f0f0ee;
+    }
+
+    .cal-month-label {
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: #111111;
+    }
+
+    .cal-nav {
+      display: flex;
+      gap: 4px;
+    }
+
+    .cal-arrow {
+      width: 26px;
+      height: 26px;
+      border: 1px solid #e0e0dc;
+      border-radius: 2px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      color: #666666;
+      transition: all 0.15s;
+    }
+
+    .cal-arrow:hover {
+      border-color: #111111;
+      color: #111111;
+    }
+
+    .cal-weekdays {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-size: 10px;
+      font-weight: 500;
+      color: #999999;
+      margin-bottom: 8px;
+    }
+
+    .cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+    }
+
+    .cal-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 400;
+      color: #111111;
+      border-radius: 2px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.12s;
+      border: 1px solid transparent;
+    }
+
+    .cal-cell:hover {
+      background: #f7f7f5;
+    }
+
+    .cal-cell.other-month {
+      color: #d0d0cc;
+    }
+
+    .cal-cell.today {
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .cal-cell.selected {
+      border-color: #111111;
+      background: #f7f7f5;
+    }
+
+    .cal-cell.has-entry {
+      font-weight: 600;
+    }
+
+    .cal-dot {
+      width: 3.5px;
+      height: 3.5px;
+      border-radius: 50%;
+      background: #111111;
+      position: absolute;
+      bottom: 4px;
+    }
+
+    /* Records List */
+    .date-records-container {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .records-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #eeeeec;
+    }
+
+    .records-date-title {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: #666666;
+    }
+
+    .records-add-btn {
+      font-size: 10px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      color: #111111;
+      text-decoration: underline;
+    }
+
+    .records-list {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .record-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 2px;
+      border-bottom: 1px solid #eeeeec;
+      font-size: 12px;
+    }
+
+    .record-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .record-title {
+      font-size: 12px;
+      font-weight: 500;
+      color: #111111;
+    }
+
+    .record-sub {
+      font-size: 10px;
+      color: #999999;
+      letter-spacing: 0.02em;
+    }
+
+    .record-meta {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .record-duration {
+      font-size: 13px;
+      font-weight: 500;
+      color: #111111;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .record-del-btn {
+      font-size: 13px;
+      color: #999999;
+      padding: 2px 4px;
+      transition: color 0.15s;
+    }
+
+    .record-del-btn:hover {
+      color: #d93838;
+    }
+
+    .empty-notice {
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: #999999;
+      text-align: center;
+      padding: 24px 0;
+    }
+
+    /* Modal Sheet */
+    .modal-backdrop {
+      position: absolute;
+      inset: 0;
+      background: rgba(18, 18, 18, 0.4);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 50;
+    }
+
+    .modal-backdrop.show {
+      display: flex;
+    }
+
+    .modal-sheet {
+      background: #ffffff;
+      border: 1px solid #dcdcd8;
+      border-radius: 2px;
+      width: 100%;
+      max-width: 320px;
+      padding: 26px 22px 22px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      animation: sheetPop 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @keyframes sheetPop {
+      from { opacity: 0; transform: scale(0.97); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .sheet-meta {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.14em;
+      color: #999999;
+      margin-bottom: 12px;
+    }
+
+    .sheet-title {
+      font-size: 20px;
+      font-weight: 400;
+      letter-spacing: -0.02em;
+      color: #111111;
+      margin-bottom: 14px;
+    }
+
+    .sheet-body {
+      margin-bottom: 22px;
+    }
+
+    .sheet-body p {
+      font-size: 12px;
+      line-height: 1.5;
+      color: #666666;
+      margin-bottom: 16px;
+    }
+
+    .sheet-stat-box {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: #f7f7f5;
+      border-radius: 2px;
+    }
+
+    .box-label {
+      font-size: 9px;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      color: #999999;
+    }
+
+    .box-time {
+      font-size: 14px;
+      font-weight: 600;
+      color: #111111;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    
+    <!-- Top Header -->
+    <header class="app-header">
+      <div class="brand">tabata<span class="dot">.</span></div>
+      <div class="header-right">
+        <button id="soundToggleBtn" class="header-sound-btn">SOUND ON</button>
+      </div>
+    </header>
+
+    <!-- Minimalist Navigation Tabs -->
+    <nav class="nav-bar">
+      <button class="nav-btn active" data-tab="timerTab">TIMER</button>
+      <button class="nav-btn" data-tab="settingsTab">SETTINGS</button>
+      <button class="nav-btn" data-tab="calendarTab">PROGRESS</button>
+    </nav>
+
+    <!-- Main Screens -->
+    <main class="content-body">
+
+      <!-- ========================================================
+           SCREEN 1: TIMER
+      ======================================================== -->
+      <section id="timerTab" class="view-screen active">
+        <!-- Sub Status Info -->
+        <div class="session-meta-row">
+          <div class="meta-col">
+            <span class="meta-col-label">ROUND</span>
+            <span class="meta-col-val" id="dispCurrentRound">1 / 1</span>
+          </div>
+          <div class="meta-sep">/</div>
+          <div class="meta-col">
+            <span class="meta-col-label">SET</span>
+            <span class="meta-col-val" id="dispCurrentSet">1 / 8</span>
+          </div>
+          <div class="meta-sep">/</div>
+          <div class="meta-col">
+            <span class="meta-col-label">TOTAL LEFT</span>
+            <span class="meta-col-val" id="dispRemainingTotal">04:00</span>
+          </div>
+        </div>
+
+        <!-- Minimal Gauge & Clock -->
+        <div class="timer-stage">
+          <div class="ring-box">
+            <svg class="clock-gauge" viewBox="0 0 260 260">
+              <circle class="gauge-track" cx="130" cy="130" r="118" fill="none"></circle>
+              <circle id="progressRingBar" class="gauge-fill" cx="130" cy="130" r="118" fill="none"></circle>
+            </svg>
+            <div class="timer-center">
+              <div id="phaseBadge" class="phase-tag">READY</div>
+              <div id="mainTimerDisplay" class="digits">00:00</div>
+              <div id="nextPhaseHint" class="next-hint">NEXT · WORK 00:20</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Minimal Controls -->
+        <div class="controls-row">
+          <button id="prevBtn" class="ctl-icon-btn" title="Previous set">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"><path d="M19 20L9 12l10-8v16z"/><line x1="5" y1="19" x2="5" y2="5"/></svg>
+          </button>
+          
+          <button id="mainActionBtn" class="ctl-main-btn">
+            <span id="mainActionText">START</span>
+          </button>
+
+          <button id="nextBtn" class="ctl-icon-btn" title="Next set">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="square"><path d="M5 4l10 8-10 8V4z"/><line x1="19" y1="5" x2="19" y2="19"/></svg>
+          </button>
+
+          <button id="resetBtn" class="ctl-icon-btn" title="Reset">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+          </button>
+        </div>
+
+        <!-- Routine Specs Summary (Subtle bar at bottom) -->
+        <div class="routine-summary-bar">
+          <div class="summary-specs">
+            <span id="specText">WORK 20s · REST 10s · 8 SETS · 1 ROUND</span>
+          </div>
+          <button id="quickEditBtn" class="text-link-btn">EDIT</button>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           SCREEN 2: SETTINGS
+      ======================================================== -->
+      <section id="settingsTab" class="view-screen">
+        <div class="screen-meta-title">
+          <span>ROUTINE CONFIGURATION</span>
+        </div>
+
+        <div class="settings-list">
+          <!-- Prepare -->
+          <div class="param-row">
+            <div class="param-left">
+              <span class="param-name">PREPARE</span>
+              <span class="param-caption">Countdown before first set</span>
+            </div>
+            <div class="param-right">
+              <button class="step-btn minus" data-target="prepTime" data-step="5">−</button>
+              <input type="number" id="prepTime" min="0" max="300" step="1" value="10">
+              <span class="param-unit">s</span>
+              <button class="step-btn plus" data-target="prepTime" data-step="5">+</button>
+            </div>
+          </div>
+
+          <!-- Work -->
+          <div class="param-row">
+            <div class="param-left">
+              <span class="param-name">WORK</span>
+              <span class="param-caption">High-intensity interval</span>
+            </div>
+            <div class="param-right">
+              <button class="step-btn minus" data-target="workTime" data-step="5">−</button>
+              <input type="number" id="workTime" min="5" max="600" step="1" value="20">
+              <span class="param-unit">s</span>
+              <button class="step-btn plus" data-target="workTime" data-step="5">+</button>
+            </div>
+          </div>
+
+          <!-- Rest -->
+          <div class="param-row">
+            <div class="param-left">
+              <span class="param-name">REST</span>
+              <span class="param-caption">Recovery interval</span>
+            </div>
+            <div class="param-right">
+              <button class="step-btn minus" data-target="restTime" data-step="5">−</button>
+              <input type="number" id="restTime" min="0" max="600" step="1" value="10">
+              <span class="param-unit">s</span>
+              <button class="step-btn plus" data-target="restTime" data-step="5">+</button>
+            </div>
+          </div>
+
+          <!-- Sets -->
+          <div class="param-row">
+            <div class="param-left">
+              <span class="param-name">SETS</span>
+              <span class="param-caption">Intervals per round</span>
+            </div>
+            <div class="param-right">
+              <button class="step-btn minus" data-target="totalSets" data-step="1">−</button>
+              <input type="number" id="totalSets" min="1" max="50" step="1" value="8">
+              <span class="param-unit">sets</span>
+              <button class="step-btn plus" data-target="totalSets" data-step="1">+</button>
+            </div>
+          </div>
+
+          <!-- Rounds -->
+          <div class="param-row">
+            <div class="param-left">
+              <span class="param-name">TOTAL ROUNDS</span>
+              <span class="param-caption">Number of cycles</span>
+            </div>
+            <div class="param-right">
+              <button class="step-btn minus" data-target="totalRounds" data-step="1">−</button>
+              <input type="number" id="totalRounds" min="1" max="20" step="1" value="1">
+              <span class="param-unit">r</span>
+              <button class="step-btn plus" data-target="totalRounds" data-step="1">+</button>
+            </div>
+          </div>
+
+          <!-- Cooldown -->
+          <div class="param-row">
+            <div class="param-left">
+              <span class="param-name">COOLDOWN / ROUND REST</span>
+              <span class="param-caption">Interval between rounds & finish</span>
+            </div>
+            <div class="param-right">
+              <button class="step-btn minus" data-target="cooldownTime" data-step="10">−</button>
+              <input type="number" id="cooldownTime" min="0" max="600" step="5" value="60">
+              <span class="param-unit">s</span>
+              <button class="step-btn plus" data-target="cooldownTime" data-step="10">+</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Total Calculation -->
+        <div class="calc-row">
+          <span class="calc-label">TOTAL TIME ESTIMATE</span>
+          <span id="calcEstimatedTotal" class="calc-val">04:00</span>
+        </div>
+
+        <!-- Presets -->
+        <div class="presets-block">
+          <div class="block-title">PRESETS</div>
+          <div class="preset-pill-group">
+            <button class="preset-pill" data-preset="classic">Classic (20s/10s × 8)</button>
+            <button class="preset-pill" data-preset="short">Gentle (15s/15s × 6)</button>
+            <button class="preset-pill" data-preset="beast">Beast (30s/15s × 8 × 2R)</button>
+            <button class="preset-pill" data-preset="hiit">HIIT (40s/20s × 5)</button>
+          </div>
+        </div>
+
+        <!-- Apply Button -->
+        <div class="apply-box">
+          <button id="saveAndStartBtn" class="btn-solid-full">APPLY SETTINGS</button>
+        </div>
+      </section>
+
+      <!-- ========================================================
+           SCREEN 3: CALENDAR / PROGRESS
+      ======================================================== -->
+      <section id="calendarTab" class="view-screen">
+        
+        <!-- Summary Stats -->
+        <div class="stats-simple-row">
+          <div class="stat-unit">
+            <span class="stat-num" id="statMonthDays">0</span>
+            <span class="stat-desc">DAYS ACTIVE</span>
+          </div>
+          <div class="stat-sep">/</div>
+          <div class="stat-unit">
+            <span class="stat-num" id="statStreak">0</span>
+            <span class="stat-desc">DAY STREAK</span>
+          </div>
+          <div class="stat-sep">/</div>
+          <div class="stat-unit">
+            <span class="stat-num" id="statTotalTime">0M</span>
+            <span class="stat-desc">TOTAL TIME</span>
+          </div>
+        </div>
+
+        <!-- Minimal Calendar -->
+        <div class="minimal-calendar">
+          <div class="cal-header">
+            <span id="calCurrentMonthTitle" class="cal-month-label">OCTOBER 2026</span>
+            <div class="cal-nav">
+              <button id="calPrevMonthBtn" class="cal-arrow" title="Previous Month">←</button>
+              <button id="calNextMonthBtn" class="cal-arrow" title="Next Month">→</button>
+            </div>
+          </div>
+
+          <div class="cal-weekdays">
+            <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+          </div>
+
+          <div id="calendarDaysGrid" class="cal-grid">
+            <!-- Injected by JS -->
+          </div>
+        </div>
+
+        <!-- Selected Date Sessions -->
+        <div class="date-records-container">
+          <div class="records-header">
+            <span id="selectedDateTitle" class="records-date-title">OCTOBER 22, 2026</span>
+            <button id="manualAddLogBtn" class="records-add-btn">+ LOG ENTRY</button>
+          </div>
+
+          <div id="selectedDateLogsList" class="records-list">
+            <div class="empty-notice">NO WORKOUT RECORDED FOR THIS DATE</div>
+          </div>
+        </div>
+
+      </section>
+
+    </main>
+
+    <!-- Workout Complete Overlay -->
+    <div id="completeModal" class="modal-backdrop">
+      <div class="modal-sheet">
+        <div class="sheet-meta">WORKOUT COMPLETED</div>
+        <div class="sheet-title">A session well done.</div>
+        <div class="sheet-body">
+          <p id="compSummaryText">Completed 8 sets across 1 round.</p>
+          <div class="sheet-stat-box">
+            <span class="box-label">TOTAL TIME RECORDED</span>
+            <span class="box-time" id="compDuration">04:00</span>
+          </div>
+        </div>
+        <div class="sheet-footer">
+          <button id="closeCompModalBtn" class="btn-solid-full">VIEW IN PROGRESS</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // TABATA - Standalone Inline Logic
+    // -------------------------------------------------------------
+    const DEFAULT_SETTINGS = {
+      prepTime: 10,
+      workTime: 20,
+      restTime: 10,
+      totalSets: 8,
+      totalRounds: 1,
+      cooldownTime: 60
+    };
+
+    let settings = { ...DEFAULT_SETTINGS };
+
+    let timerState = {
+      isRunning: false,
+      isPaused: false,
+      phase: 'READY',
+      currentRound: 1,
+      currentSet: 1,
+      phaseDuration: 10,
+      phaseRemaining: 10,
+      totalRemaining: 0,
+      sessionStartTime: null,
+      timerIntervalId: null,
+      lastTickTime: null
+    };
+
+    let soundEnabled = true;
+    let audioCtx = null;
+    let wakeLock = null;
+
+    let calCurrentYear = new Date().getFullYear();
+    let calCurrentMonth = new Date().getMonth();
+    let selectedDateStr = formatDateKey(new Date());
+
+    const MONTH_NAMES = [
+      'JANUARY', 'FEBRUARY', 'MARCH', 'APRIL', 'MAY', 'JUNE',
+      'JULY', 'AUGUST', 'SEPTEMBER', 'OCTOBER', 'NOVEMBER', 'DECEMBER'
+    ];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      loadSavedSettings();
+      initFormInputs();
+      calculateAndDisplayTotalEstimate();
+      updateTimerDisplayInitial();
+      setupEventListeners();
+      renderCalendar();
+      loadLogsForSelectedDate(selectedDateStr);
+      updateMonthlyStats();
+    });
+
+    function loadSavedSettings() {
+      try {
+        const saved = localStorage.getItem('tabata_settings');
+        if (saved) settings = Object.assign({}, DEFAULT_SETTINGS, JSON.parse(saved));
+      } catch (e) {}
+    }
+
+    function saveSettings() {
+      localStorage.setItem('tabata_settings', JSON.stringify(settings));
+    }
+
+    function getAudioContext() {
+      if (!audioCtx) {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (AudioContextClass) audioCtx = new AudioContextClass();
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      return audioCtx;
+    }
+
+    function playTone(freq, duration, type = 'sine', volume = 0.25) {
+      if (!soundEnabled) return;
+      try {
+        const ctx = getAudioContext();
+        if (!ctx) return;
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, ctx.currentTime);
+        gain.gain.setValueAtTime(volume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + duration);
+      } catch (e) {}
+    }
+
+    function playCountBeep() { playTone(800, 0.08, 'sine', 0.2); }
+    function playStartWorkBeep() { playTone(950, 0.25, 'sine', 0.35); }
+    function playRestBeep() { playTone(550, 0.15, 'sine', 0.25); }
+    function playFinishJingle() {
+      if (!soundEnabled) return;
+      const notes = [
+        { freq: 523.25, t: 0, d: 0.12 },
+        { freq: 659.25, t: 140, d: 0.12 },
+        { freq: 783.99, t: 280, d: 0.12 },
+        { freq: 1046.50, t: 420, d: 0.35 }
+      ];
+      notes.forEach(n => setTimeout(() => playTone(n.freq, n.d, 'sine', 0.3), n.t));
+    }
+
+    async function requestWakeLock() {
+      if ('wakeLock' in navigator) {
+        try { wakeLock = await navigator.wakeLock.request('screen'); } catch (e) {}
+      }
+    }
+
+    function releaseWakeLock() {
+      if (wakeLock) {
+        wakeLock.release().then(() => { wakeLock = null; }).catch(() => {});
+      }
+    }
+
+    function calculateTotalSeconds(cfg = settings) {
+      const workTotal = cfg.totalSets * cfg.workTime;
+      const restTotal = Math.max(0, cfg.totalSets - 1) * cfg.restTime;
+      const oneRoundTotal = workTotal + restTotal;
+      let total = cfg.prepTime + (cfg.totalRounds * oneRoundTotal);
+      if (cfg.totalRounds > 1) total += (cfg.totalRounds - 1) * cfg.cooldownTime;
+      if (cfg.cooldownTime > 0) total += cfg.cooldownTime;
+      return total;
+    }
+
+    function resetTimerState() {
+      clearInterval(timerState.timerIntervalId);
+      releaseWakeLock();
+
+      timerState.isRunning = false;
+      timerState.isPaused = false;
+      timerState.phase = 'READY';
+      timerState.currentRound = 1;
+      timerState.currentSet = 1;
+      timerState.phaseDuration = settings.prepTime > 0 ? settings.prepTime : settings.workTime;
+      timerState.phaseRemaining = timerState.phaseDuration;
+      timerState.totalRemaining = calculateTotalSeconds(settings);
+      timerState.sessionStartTime = null;
+
+      updateUIPhase();
+      updateUIDisplay();
+      updateActionBtn();
+    }
+
+    function startTimer() {
+      getAudioContext();
+      requestWakeLock();
+
+      if (timerState.phase === 'READY' || timerState.phase === 'FINISHED') {
+        timerState.currentRound = 1;
+        timerState.currentSet = 1;
+        timerState.sessionStartTime = new Date();
+        if (settings.prepTime > 0) {
+          setPhase('PREP', settings.prepTime);
+        } else {
+          setPhase('WORK', settings.workTime);
+        }
+        timerState.totalRemaining = calculateTotalSeconds(settings);
+      }
+
+      timerState.isRunning = true;
+      timerState.isPaused = false;
+      timerState.lastTickTime = Date.now();
+
+      clearInterval(timerState.timerIntervalId);
+      timerState.timerIntervalId = setInterval(timerTick, 100);
+      updateActionBtn();
+    }
+
+    function pauseTimer() {
+      timerState.isRunning = false;
+      timerState.isPaused = true;
+      clearInterval(timerState.timerIntervalId);
+      releaseWakeLock();
+      updateActionBtn();
+    }
+
+    function toggleStartPause() {
+      if (timerState.isRunning) pauseTimer();
+      else startTimer();
+    }
+
+    function setPhase(newPhase, duration) {
+      timerState.phase = newPhase;
+      timerState.phaseDuration = duration;
+      timerState.phaseRemaining = duration;
+
+      if (newPhase === 'WORK') playStartWorkBeep();
+      else if (newPhase === 'REST') playRestBeep();
+      else if (newPhase === 'PREP') playTone(600, 0.08, 'sine', 0.2);
+
+      updateUIPhase();
+      updateUIDisplay();
+    }
+
+    function timerTick() {
+      const now = Date.now();
+      const delta = (now - timerState.lastTickTime) / 1000;
+      timerState.lastTickTime = now;
+
+      timerState.phaseRemaining -= delta;
+      timerState.totalRemaining = Math.max(0, timerState.totalRemaining - delta);
+
+      const wholeSec = Math.ceil(timerState.phaseRemaining);
+      const prevWholeSec = Math.ceil(timerState.phaseRemaining + delta);
+      if (wholeSec !== prevWholeSec && wholeSec >= 1 && wholeSec <= 3 && timerState.phaseRemaining > 0) {
+        playCountBeep();
+      }
+
+      if (timerState.phaseRemaining <= 0.05) {
+        advanceToNextPhase();
+      } else {
+        updateUIDisplay();
+      }
+    }
+
+    function advanceToNextPhase() {
+      const { phase, currentSet, currentRound } = timerState;
+
+      if (phase === 'PREP') {
+        setPhase('WORK', settings.workTime);
+        return;
+      }
+
+      if (phase === 'WORK') {
+        if (currentSet < settings.totalSets) {
+          if (settings.restTime > 0) {
+            setPhase('REST', settings.restTime);
+          } else {
+            timerState.currentSet++;
+            setPhase('WORK', settings.workTime);
+          }
+        } else {
+          if (currentRound < settings.totalRounds) {
+            setPhase('COOLDOWN', settings.cooldownTime);
+          } else {
+            if (settings.cooldownTime > 0) {
+              setPhase('COOLDOWN', settings.cooldownTime);
+            } else {
+              finishWorkout();
+            }
+          }
+        }
+        return;
+      }
+
+      if (phase === 'REST') {
+        timerState.currentSet++;
+        setPhase('WORK', settings.workTime);
+        return;
+      }
+
+      if (phase === 'COOLDOWN') {
+        if (currentRound < settings.totalRounds) {
+          timerState.currentRound++;
+          timerState.currentSet = 1;
+          setPhase('WORK', settings.workTime);
+        } else {
+          finishWorkout();
+        }
+        return;
+      }
+    }
+
+    function skipNext() {
+      if (!timerState.isRunning && !timerState.isPaused) return;
+      advanceToNextPhase();
+    }
+
+    function skipPrev() {
+      if (!timerState.isRunning && !timerState.isPaused) return;
+      if (timerState.phase === 'REST' || timerState.phase === 'WORK') {
+        if (timerState.currentSet > 1) {
+          timerState.currentSet--;
+          setPhase('WORK', settings.workTime);
+        } else if (timerState.currentRound > 1) {
+          timerState.currentRound--;
+          timerState.currentSet = settings.totalSets;
+          setPhase('WORK', settings.workTime);
+        } else {
+          resetTimerState();
+        }
+      } else {
+        resetTimerState();
+      }
+    }
+
+    function finishWorkout() {
+      clearInterval(timerState.timerIntervalId);
+      releaseWakeLock();
+
+      timerState.isRunning = false;
+      timerState.isPaused = false;
+      timerState.phase = 'FINISHED';
+      timerState.totalRemaining = 0;
+      timerState.phaseRemaining = 0;
+
+      playFinishJingle();
+      updateUIPhase();
+      updateUIDisplay();
+      updateActionBtn();
+
+      const totalDurationSec = calculateTotalSeconds(settings);
+      recordCompletedWorkout(totalDurationSec);
+      showCelebrationModal(totalDurationSec);
+    }
+
+    function formatSecondsToMMSS(seconds) {
+      const s = Math.max(0, Math.ceil(seconds));
+      const m = Math.floor(s / 60);
+      const remSec = s % 60;
+      return `${String(m).padStart(2, '0')}:${String(remSec).padStart(2, '0')}`;
+    }
+
+    function updateUIDisplay() {
+      const mainDisplay = document.getElementById('mainTimerDisplay');
+      const remTotal = document.getElementById('dispRemainingTotal');
+      const dispRound = document.getElementById('dispCurrentRound');
+      const dispSet = document.getElementById('dispCurrentSet');
+      const ringBar = document.getElementById('progressRingBar');
+
+      mainDisplay.textContent = formatSecondsToMMSS(timerState.phaseRemaining);
+      remTotal.textContent = formatSecondsToMMSS(timerState.totalRemaining);
+
+      dispRound.textContent = `${timerState.currentRound} / ${settings.totalRounds}`;
+      dispSet.textContent = `${timerState.currentSet} / ${settings.totalSets}`;
+
+      const circumference = 2 * Math.PI * 118; // 741.41
+      if (timerState.phaseDuration > 0) {
+        const fraction = Math.max(0, timerState.phaseRemaining / timerState.phaseDuration);
+        const offset = circumference * (1 - fraction);
+        ringBar.style.strokeDasharray = `${circumference}`;
+        ringBar.style.strokeDashoffset = `${offset}`;
+      } else {
+        ringBar.style.strokeDashoffset = '0';
+      }
+    }
+
+    function updateUIPhase() {
+      const badge = document.getElementById('phaseBadge');
+      const nextHint = document.getElementById('nextPhaseHint');
+
+      badge.className = 'phase-tag';
+
+      switch (timerState.phase) {
+        case 'READY':
+          badge.textContent = 'READY';
+          nextHint.textContent = `NEXT · ${settings.prepTime > 0 ? 'PREPARE ' + settings.prepTime + 's' : 'WORK ' + settings.workTime + 's'}`;
+          break;
+        case 'PREP':
+          badge.textContent = 'COUNTDOWN';
+          nextHint.textContent = `NEXT · WORK ${formatSecondsToMMSS(settings.workTime)}`;
+          break;
+        case 'WORK':
+          badge.textContent = 'WORK';
+          badge.classList.add('work');
+          const isLastSet = timerState.currentSet >= settings.totalSets;
+          nextHint.textContent = isLastSet
+            ? (timerState.currentRound >= settings.totalRounds ? 'NEXT · COOLDOWN' : 'NEXT · ROUND REST')
+            : `NEXT · REST ${formatSecondsToMMSS(settings.restTime)}`;
+          break;
+        case 'REST':
+          badge.textContent = 'REST';
+          badge.classList.add('rest');
+          nextHint.textContent = `NEXT · WORK ${formatSecondsToMMSS(settings.workTime)}`;
+          break;
+        case 'COOLDOWN':
+          badge.textContent = 'COOLDOWN';
+          badge.classList.add('cooldown');
+          nextHint.textContent = timerState.currentRound < settings.totalRounds
+            ? `NEXT · ROUND ${timerState.currentRound + 1}`
+            : 'NEXT · FINISH';
+          break;
+        case 'FINISHED':
+          badge.textContent = 'DONE';
+          nextHint.textContent = 'SESSION COMPLETED';
+          break;
+      }
+    }
+
+    function updateActionBtn() {
+      const btn = document.getElementById('mainActionBtn');
+      const text = document.getElementById('mainActionText');
+      if (timerState.isRunning) {
+        btn.classList.add('is-running');
+        text.textContent = 'PAUSE';
+      } else {
+        btn.classList.remove('is-running');
+        text.textContent = timerState.isPaused ? 'RESUME' : 'START';
+      }
+    }
+
+    function updateTimerDisplayInitial() {
+      resetTimerState();
+      updateRoutineSummaryBar();
+    }
+
+    function updateRoutineSummaryBar() {
+      const specText = document.getElementById('specText');
+      if (specText) {
+        specText.textContent = `WORK ${settings.workTime}s · REST ${settings.restTime}s · ${settings.totalSets} SETS · ${settings.totalRounds} ROUND${settings.totalRounds > 1 ? 'S' : ''}`;
+      }
+    }
+
+    function initFormInputs() {
+      const keys = ['prepTime', 'workTime', 'restTime', 'totalSets', 'totalRounds', 'cooldownTime'];
+      keys.forEach(k => {
+        const input = document.getElementById(k);
+        if (input) {
+          input.value = settings[k];
+          input.addEventListener('change', () => {
+            settings[k] = parseInt(input.value, 10) || 0;
+            calculateAndDisplayTotalEstimate();
+          });
+        }
+      });
+
+      document.querySelectorAll('.step-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const targetId = btn.dataset.target;
+          const step = parseInt(btn.dataset.step, 10) || 1;
+          const isMinus = btn.classList.contains('minus');
+          const input = document.getElementById(targetId);
+          if (!input) return;
+
+          let val = parseInt(input.value, 10) || 0;
+          val = isMinus ? val - step : val + step;
+          const min = parseInt(input.min, 10) || 0;
+          const max = parseInt(input.max, 10) || 999;
+          val = Math.max(min, Math.min(max, val));
+
+          input.value = val;
+          settings[targetId] = val;
+          calculateAndDisplayTotalEstimate();
+        });
+      });
+
+      document.querySelectorAll('.preset-pill').forEach(btn => {
+        btn.addEventListener('click', () => {
+          applyPreset(btn.dataset.preset);
+        });
+      });
+    }
+
+    function applyPreset(presetName) {
+      switch (presetName) {
+        case 'classic':
+          settings.prepTime = 10;
+          settings.workTime = 20;
+          settings.restTime = 10;
+          settings.totalSets = 8;
+          settings.totalRounds = 1;
+          settings.cooldownTime = 60;
+          break;
+        case 'short':
+          settings.prepTime = 10;
+          settings.workTime = 15;
+          settings.restTime = 15;
+          settings.totalSets = 6;
+          settings.totalRounds = 1;
+          settings.cooldownTime = 30;
+          break;
+        case 'beast':
+          settings.prepTime = 10;
+          settings.workTime = 30;
+          settings.restTime = 15;
+          settings.totalSets = 8;
+          settings.totalRounds = 2;
+          settings.cooldownTime = 60;
+          break;
+        case 'hiit':
+          settings.prepTime = 10;
+          settings.workTime = 40;
+          settings.restTime = 20;
+          settings.totalSets = 5;
+          settings.totalRounds = 1;
+          settings.cooldownTime = 45;
+          break;
+      }
+
+      ['prepTime', 'workTime', 'restTime', 'totalSets', 'totalRounds', 'cooldownTime'].forEach(k => {
+        const el = document.getElementById(k);
+        if (el) el.value = settings[k];
+      });
+
+      calculateAndDisplayTotalEstimate();
+    }
+
+    function calculateAndDisplayTotalEstimate() {
+      const total = calculateTotalSeconds(settings);
+      document.getElementById('calcEstimatedTotal').textContent = formatSecondsToMMSS(total);
+    }
+
+    function getLogs() {
+      try {
+        const raw = localStorage.getItem('tabata_workout_logs');
+        return raw ? JSON.parse(raw) : [];
+      } catch (e) {
+        return [];
+      }
+    }
+
+    function saveLogs(logs) {
+      localStorage.setItem('tabata_workout_logs', JSON.stringify(logs));
+    }
+
+    function formatDateKey(dateObj) {
+      const y = dateObj.getFullYear();
+      const m = String(dateObj.getMonth() + 1).padStart(2, '0');
+      const d = String(dateObj.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function formatPrettyDate(dateKey) {
+      const [y, m, d] = dateKey.split('-');
+      const monthName = MONTH_NAMES[parseInt(m, 10) - 1];
+      return `${monthName} ${parseInt(d, 10)}, ${y}`;
+    }
+
+    function recordCompletedWorkout(durationSec) {
+      const logs = getLogs();
+      const now = new Date();
+      const newLog = {
+        id: 'log_' + Date.now(),
+        date: formatDateKey(now),
+        timeStr: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        durationSec: durationSec,
+        rounds: settings.totalRounds,
+        sets: settings.totalSets,
+        workTime: settings.workTime,
+        restTime: settings.restTime,
+        name: 'Tabata Session'
+      };
+
+      logs.push(newLog);
+      saveLogs(logs);
+
+      renderCalendar();
+      loadLogsForSelectedDate(selectedDateStr);
+      updateMonthlyStats();
+    }
+
+    function deleteLog(logId) {
+      if (!confirm('Delete this workout record?')) return;
+      let logs = getLogs();
+      logs = logs.filter(l => l.id !== logId);
+      saveLogs(logs);
+
+      renderCalendar();
+      loadLogsForSelectedDate(selectedDateStr);
+      updateMonthlyStats();
+    }
+
+    function addManualWorkoutLog() {
+      const durationMin = prompt('Workout duration in minutes:', '4');
+      if (!durationMin || isNaN(durationMin) || Number(durationMin) <= 0) return;
+
+      const logs = getLogs();
+      const now = new Date();
+      const newLog = {
+        id: 'log_' + Date.now(),
+        date: selectedDateStr,
+        timeStr: now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false }),
+        durationSec: Math.round(Number(durationMin) * 60),
+        rounds: 1,
+        sets: 8,
+        workTime: 20,
+        restTime: 10,
+        name: 'Manual Entry'
+      };
+
+      logs.push(newLog);
+      saveLogs(logs);
+
+      renderCalendar();
+      loadLogsForSelectedDate(selectedDateStr);
+      updateMonthlyStats();
+    }
+
+    function renderCalendar() {
+      const grid = document.getElementById('calendarDaysGrid');
+      const title = document.getElementById('calCurrentMonthTitle');
+      if (!grid || !title) return;
+
+      grid.innerHTML = '';
+      title.textContent = `${MONTH_NAMES[calCurrentMonth]} ${calCurrentYear}`;
+
+      const logs = getLogs();
+      const logsByDate = {};
+      logs.forEach(l => { logsByDate[l.date] = (logsByDate[l.date] || 0) + 1; });
+
+      const todayStr = formatDateKey(new Date());
+
+      const firstDayIndex = new Date(calCurrentYear, calCurrentMonth, 1).getDay();
+      const lastDayCurrentMonth = new Date(calCurrentYear, calCurrentMonth + 1, 0).getDate();
+      const lastDayPrevMonth = new Date(calCurrentYear, calCurrentMonth, 0).getDate();
+
+      for (let i = firstDayIndex - 1; i >= 0; i--) {
+        const dayNum = lastDayPrevMonth - i;
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell other-month';
+        cell.textContent = dayNum;
+        grid.appendChild(cell);
+      }
+
+      for (let day = 1; day <= lastDayCurrentMonth; day++) {
+        const dObj = new Date(calCurrentYear, calCurrentMonth, day);
+        const dateStr = formatDateKey(dObj);
+        const hasWorkout = Boolean(logsByDate[dateStr]);
+
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell';
+        cell.textContent = day;
+
+        if (dateStr === todayStr) cell.classList.add('today');
+        if (dateStr === selectedDateStr) cell.classList.add('selected');
+        if (hasWorkout) {
+          cell.classList.add('has-entry');
+          const dot = document.createElement('span');
+          dot.className = 'cal-dot';
+          cell.appendChild(dot);
+        }
+
+        cell.addEventListener('click', () => {
+          selectedDateStr = dateStr;
+          renderCalendar();
+          loadLogsForSelectedDate(selectedDateStr);
+        });
+
+        grid.appendChild(cell);
+      }
+
+      const totalCells = firstDayIndex + lastDayCurrentMonth;
+      const remainingCells = (7 - (totalCells % 7)) % 7;
+      for (let j = 1; j <= remainingCells; j++) {
+        const cell = document.createElement('div');
+        cell.className = 'cal-cell other-month';
+        cell.textContent = j;
+        grid.appendChild(cell);
+      }
+    }
+
+    function loadLogsForSelectedDate(dateStr) {
+      const container = document.getElementById('selectedDateLogsList');
+      const title = document.getElementById('selectedDateTitle');
+      if (!container || !title) return;
+
+      title.textContent = formatPrettyDate(dateStr);
+      const logs = getLogs().filter(l => l.date === dateStr);
+      container.innerHTML = '';
+
+      if (logs.length === 0) {
+        container.innerHTML = '<div class="empty-notice">NO WORKOUT RECORDED FOR THIS DATE</div>';
+        return;
+      }
+
+      logs.forEach(l => {
+        const item = document.createElement('div');
+        item.className = 'record-row';
+        item.innerHTML = `
+          <div class="record-info">
+            <span class="record-title">${l.rounds}R × ${l.sets}S (${l.workTime}s / ${l.restTime}s)</span>
+            <span class="record-sub">${l.timeStr || '--:--'} · ${l.name || 'Tabata'}</span>
+          </div>
+          <div class="record-meta">
+            <span class="record-duration">${formatSecondsToMMSS(l.durationSec)}</span>
+            <button class="record-del-btn" title="Delete" onclick="deleteLog('${l.id}')">✕</button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function updateMonthlyStats() {
+      const logs = getLogs();
+      const currentMonthPrefix = `${calCurrentYear}-${String(calCurrentMonth + 1).padStart(2, '0')}`;
+      const thisMonthLogs = logs.filter(l => l.date.startsWith(currentMonthPrefix));
+
+      const uniqueDays = new Set(thisMonthLogs.map(l => l.date));
+      document.getElementById('statMonthDays').textContent = uniqueDays.size;
+
+      const totalSeconds = thisMonthLogs.reduce((acc, curr) => acc + (curr.durationSec || 0), 0);
+      const totalMins = Math.round(totalSeconds / 60);
+      document.getElementById('statTotalTime').textContent = `${totalMins}M`;
+
+      const streak = calculateStreak(logs);
+      document.getElementById('statStreak').textContent = streak;
+    }
+
+    function calculateStreak(logs) {
+      if (!logs || logs.length === 0) return 0;
+      const dates = Array.from(new Set(logs.map(l => l.date))).sort().reverse();
+      const todayStr = formatDateKey(new Date());
+      
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = formatDateKey(yesterday);
+
+      let checkDate = new Date();
+      if (dates[0] === todayStr) {
+      } else if (dates[0] === yesterdayStr) {
+        checkDate.setDate(checkDate.getDate() - 1);
+      } else {
+        return 0;
+      }
+
+      let streak = 0;
+      for (let i = 0; i < 365; i++) {
+        const curStr = formatDateKey(checkDate);
+        if (dates.includes(curStr)) {
+          streak++;
+          checkDate.setDate(checkDate.getDate() - 1);
+        } else {
+          break;
+        }
+      }
+      return streak;
+    }
+
+    function showCelebrationModal(durationSec) {
+      const modal = document.getElementById('completeModal');
+      document.getElementById('compDuration').textContent = formatSecondsToMMSS(durationSec);
+      document.getElementById('compSummaryText').textContent = `Completed ${settings.totalSets} sets across ${settings.totalRounds} round${settings.totalRounds > 1 ? 's' : ''}.`;
+      modal.classList.add('show');
+    }
+
+    function hideCelebrationModal() {
+      document.getElementById('completeModal').classList.remove('show');
+    }
+
+    function setupEventListeners() {
+      document.querySelectorAll('.nav-btn').forEach(tab => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.nav-btn').forEach(t => t.classList.remove('active'));
+          document.querySelectorAll('.view-screen').forEach(p => p.classList.remove('active'));
+
+          tab.classList.add('active');
+          const targetPane = document.getElementById(tab.dataset.tab);
+          if (targetPane) targetPane.classList.add('active');
+
+          if (tab.dataset.tab === 'calendarTab') {
+            renderCalendar();
+            updateMonthlyStats();
+          }
+        });
+      });
+
+      const soundBtn = document.getElementById('soundToggleBtn');
+      soundBtn.addEventListener('click', () => {
+        soundEnabled = !soundEnabled;
+        soundBtn.textContent = soundEnabled ? 'SOUND ON' : 'MUTED';
+        if (soundEnabled) playCountBeep();
+      });
+
+      document.getElementById('mainActionBtn').addEventListener('click', toggleStartPause);
+      document.getElementById('resetBtn').addEventListener('click', () => {
+        if (timerState.isRunning && !confirm('Reset current routine?')) return;
+        resetTimerState();
+      });
+      document.getElementById('nextBtn').addEventListener('click', skipNext);
+      document.getElementById('prevBtn').addEventListener('click', skipPrev);
+
+      document.getElementById('quickEditBtn').addEventListener('click', () => {
+        const settingsTabBtn = document.querySelector('[data-tab="settingsTab"]');
+        if (settingsTabBtn) settingsTabBtn.click();
+      });
+
+      document.getElementById('saveAndStartBtn').addEventListener('click', () => {
+        saveSettings();
+        updateTimerDisplayInitial();
+        const timerTabBtn = document.querySelector('[data-tab="timerTab"]');
+        if (timerTabBtn) timerTabBtn.click();
+      });
+
+      document.getElementById('calPrevMonthBtn').addEventListener('click', () => {
+        calCurrentMonth--;
+        if (calCurrentMonth < 0) {
+          calCurrentMonth = 11;
+          calCurrentYear--;
+        }
+        renderCalendar();
+        updateMonthlyStats();
+      });
+
+      document.getElementById('calNextMonthBtn').addEventListener('click', () => {
+        calCurrentMonth++;
+        if (calCurrentMonth > 11) {
+          calCurrentMonth = 0;
+          calCurrentYear++;
+        }
+        renderCalendar();
+        updateMonthlyStats();
+      });
+
+      document.getElementById('manualAddLogBtn').addEventListener('click', addManualWorkoutLog);
+
+      document.getElementById('closeCompModalBtn').addEventListener('click', () => {
+        hideCelebrationModal();
+        const calTabBtn = document.querySelector('[data-tab="calendarTab"]');
+        if (calTabBtn) calTabBtn.click();
+      });
+    }
+  </script>
+</body>
+</html>
