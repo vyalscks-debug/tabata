@@ -183,96 +183,85 @@
       display: flex;
       justify-content: center;
       align-items: center;
-      margin: 8px 0 28px;
+      margin: 8px 0 20px;
     }
 
-    .ring-box {
-      position: relative;
-      width: 240px;
-      height: 240px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .clock-gauge {
+    /* Black full-width timer block */
+    .timer-block {
       width: 100%;
-      height: 100%;
-      transform: rotate(-90deg);
-      display: block;
-    }
-
-    .gauge-track {
-      fill: none;
-      stroke: #f0f0ee;
-      stroke-width: 3.5;
-    }
-
-    .gauge-fill {
-      fill: none;
-      stroke: #111111;
-      stroke-width: 3.5;
-      stroke-linecap: round;
-      stroke-dasharray: 741.4; /* 2 * PI * 118 */
-      stroke-dashoffset: 0;
-      transition: stroke-dashoffset 0.12s linear;
-    }
-
-    .timer-center {
-      position: absolute;
+      background: #111111;
+      border-radius: 4px;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      text-align: center;
-      width: 100%;
+      padding: 28px 20px 24px;
+      position: relative;
+      gap: 0;
     }
 
     .phase-tag {
       font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      padding: 3px 8px;
-      border: 1px solid #dcdcd8;
+      font-weight: 700;
+      letter-spacing: 0.18em;
+      padding: 4px 10px;
+      border: 1px solid rgba(255,255,255,0.2);
       border-radius: 2px;
-      color: #666666;
-      margin-bottom: 8px;
-      background: #ffffff;
+      color: rgba(255,255,255,0.55);
+      margin-bottom: 16px;
+      background: transparent;
       transition: all 0.2s;
+      text-transform: uppercase;
     }
 
     .phase-tag.work {
-      border-color: #111111;
+      border-color: #ffffff;
       color: #ffffff;
-      background: #111111;
     }
 
     .phase-tag.rest {
-      border-color: #dcdcd8;
-      color: #666666;
-      background: #f7f7f5;
+      border-color: rgba(255,255,255,0.3);
+      color: rgba(255,255,255,0.6);
     }
 
     .phase-tag.cooldown {
-      border-color: #dcdcd8;
-      color: #666666;
-      background: #eeeeec;
+      border-color: rgba(255,255,255,0.25);
+      color: rgba(255,255,255,0.5);
     }
 
     .digits {
-      font-size: 58px;
-      font-weight: 300;
+      font-size: 96px;
+      font-weight: 900;
       line-height: 1;
-      letter-spacing: -0.04em;
-      color: #111111;
+      letter-spacing: -0.02em;
+      color: #ffffff;
       font-variant-numeric: tabular-nums;
-      margin-bottom: 10px;
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Arial, sans-serif;
+      margin-bottom: 18px;
+    }
+
+    /* Progress bar inside the black block */
+    .inline-progress-track {
+      width: 100%;
+      height: 3px;
+      background: rgba(255,255,255,0.12);
+      border-radius: 2px;
+      margin-bottom: 16px;
+      overflow: hidden;
+    }
+
+    .inline-progress-fill {
+      height: 100%;
+      background: #ffffff;
+      border-radius: 2px;
+      width: 100%;
+      transition: width 0.12s linear;
     }
 
     .next-hint {
       font-size: 10px;
-      letter-spacing: 0.08em;
-      color: #999999;
+      letter-spacing: 0.1em;
+      color: rgba(255,255,255,0.4);
       font-weight: 500;
     }
 
@@ -890,18 +879,15 @@
           </div>
         </div>
 
-        <!-- Minimal Gauge & Clock -->
+        <!-- Black Bold Timer Block -->
         <div class="timer-stage">
-          <div class="ring-box">
-            <svg class="clock-gauge" viewBox="0 0 260 260">
-              <circle class="gauge-track" cx="130" cy="130" r="118" fill="none"></circle>
-              <circle id="progressRingBar" class="gauge-fill" cx="130" cy="130" r="118" fill="none"></circle>
-            </svg>
-            <div class="timer-center">
-              <div id="phaseBadge" class="phase-tag">READY</div>
-              <div id="mainTimerDisplay" class="digits">00:00</div>
-              <div id="nextPhaseHint" class="next-hint">NEXT · WORK 00:20</div>
+          <div class="timer-block">
+            <div id="phaseBadge" class="phase-tag">READY</div>
+            <div id="mainTimerDisplay" class="digits">00:00</div>
+            <div class="inline-progress-track">
+              <div id="progressFill" class="inline-progress-fill"></div>
             </div>
+            <div id="nextPhaseHint" class="next-hint">NEXT · WORK 00:20</div>
           </div>
         </div>
 
@@ -1203,36 +1189,106 @@
       return audioCtx;
     }
 
-    function playTone(freq, duration, type = 'sine', volume = 0.25) {
+    function playTone(freq, duration, type = 'square', volume = 1.0) {
       if (!soundEnabled) return;
       try {
         const ctx = getAudioContext();
         if (!ctx) return;
+
+        // Distortion for extra punch
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
+
+        // Compressor to prevent clipping distortion while keeping loudness
+        const compressor = ctx.createDynamicsCompressor();
+        compressor.threshold.setValueAtTime(-6, ctx.currentTime);
+        compressor.knee.setValueAtTime(3, ctx.currentTime);
+        compressor.ratio.setValueAtTime(4, ctx.currentTime);
+        compressor.attack.setValueAtTime(0.001, ctx.currentTime);
+        compressor.release.setValueAtTime(0.1, ctx.currentTime);
+
         osc.type = type;
         osc.frequency.setValueAtTime(freq, ctx.currentTime);
-        gain.gain.setValueAtTime(volume, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+        // Sharp attack, quick decay for punchy beep
+        gain.gain.setValueAtTime(0, ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(volume, ctx.currentTime + 0.005);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+
         osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
+        gain.connect(compressor);
+        compressor.connect(ctx.destination);
+
+        osc.start(ctx.currentTime);
         osc.stop(ctx.currentTime + duration);
       } catch (e) {}
     }
 
-    function playCountBeep() { playTone(800, 0.08, 'sine', 0.2); }
-    function playStartWorkBeep() { playTone(950, 0.25, 'sine', 0.35); }
-    function playRestBeep() { playTone(550, 0.15, 'sine', 0.25); }
+    // 3-2-1 카운트다운: 날카로운 짧은 삐 (square파 고음)
+    function playCountBeep() {
+      playTone(1200, 0.12, 'square', 1.0);
+    }
+
+    // 운동 시작: 높고 강한 더블 삐
+    function playStartWorkBeep() {
+      playTone(1400, 0.18, 'square', 1.0);
+      setTimeout(() => playTone(1600, 0.28, 'square', 1.0), 200);
+    }
+
+    // 휴식 시작: 낮고 부드러운 내려가는 삐
+    function playRestBeep() {
+      playTone(800, 0.2, 'square', 0.9);
+      setTimeout(() => playTone(600, 0.3, 'square', 0.8), 220);
+    }
+
+    // 완료: 상승하는 4음 팡파레
     function playFinishJingle() {
       if (!soundEnabled) return;
       const notes = [
-        { freq: 523.25, t: 0, d: 0.12 },
-        { freq: 659.25, t: 140, d: 0.12 },
-        { freq: 783.99, t: 280, d: 0.12 },
-        { freq: 1046.50, t: 420, d: 0.35 }
+        { freq: 784, t: 0,   d: 0.18 },
+        { freq: 988, t: 200, d: 0.18 },
+        { freq: 1175, t: 400, d: 0.18 },
+        { freq: 1568, t: 600, d: 0.55 }
       ];
-      notes.forEach(n => setTimeout(() => playTone(n.freq, n.d, 'sine', 0.3), n.t));
+      notes.forEach(n => setTimeout(() => playTone(n.freq, n.d, 'square', 0.9), n.t));
+    }
+
+    // ── Web Speech API (TTS) ──────────────────────────────────
+    // 비프음보다 훨씬 크고 명확하게 들림, 일부 기기 무음 우회 가능
+    function speak(text, { rate = 1.1, pitch = 1.1, volume: vol = 1.0 } = {}) {
+      if (!soundEnabled) return;
+      if (!window.speechSynthesis) return;
+      // 이전 발화 중단 후 새로 발화
+      window.speechSynthesis.cancel();
+      const utter = new SpeechSynthesisUtterance(text);
+      utter.lang = 'en-US';
+      utter.rate = rate;
+      utter.pitch = pitch;
+      utter.volume = vol;
+      window.speechSynthesis.speak(utter);
+    }
+
+    // 카운트다운 숫자별 TTS
+    const COUNT_WORDS = { 3: 'THREE', 2: 'TWO', 1: 'ONE' };
+
+    function announceCountdown(n) {
+      if (!soundEnabled) return;
+      playCountBeep();                        // 비프음도 동시에
+      speak(COUNT_WORDS[n] || String(n), { rate: 1.2, pitch: 1.2 });
+    }
+
+    // 페이즈 전환 TTS
+    function announcePhase(phase) {
+      if (!soundEnabled) return;
+      const phrases = {
+        PREP:     'Get ready!',
+        WORK:     'Go!',
+        REST:     'Rest.',
+        COOLDOWN: 'Cool down.',
+        FINISHED: 'Great job! Workout complete!'
+      };
+      const text = phrases[phase];
+      if (text) speak(text, { rate: 1.05, pitch: 1.0 });
     }
 
     async function requestWakeLock() {
@@ -1319,9 +1375,20 @@
       timerState.phaseDuration = duration;
       timerState.phaseRemaining = duration;
 
-      if (newPhase === 'WORK') playStartWorkBeep();
-      else if (newPhase === 'REST') playRestBeep();
-      else if (newPhase === 'PREP') playTone(600, 0.08, 'sine', 0.2);
+      // 비프음 + TTS 동시 안내
+      if (newPhase === 'WORK') {
+        playStartWorkBeep();
+        announcePhase('WORK');
+      } else if (newPhase === 'REST') {
+        playRestBeep();
+        announcePhase('REST');
+      } else if (newPhase === 'PREP') {
+        playTone(600, 0.08, 'sine', 0.2);
+        announcePhase('PREP');
+      } else if (newPhase === 'COOLDOWN') {
+        playRestBeep();
+        announcePhase('COOLDOWN');
+      }
 
       updateUIPhase();
       updateUIDisplay();
@@ -1337,8 +1404,10 @@
 
       const wholeSec = Math.ceil(timerState.phaseRemaining);
       const prevWholeSec = Math.ceil(timerState.phaseRemaining + delta);
+
+      // 3, 2, 1 — 음성 + 비프음 동시
       if (wholeSec !== prevWholeSec && wholeSec >= 1 && wholeSec <= 3 && timerState.phaseRemaining > 0) {
-        playCountBeep();
+        announceCountdown(wholeSec);
       }
 
       if (timerState.phaseRemaining <= 0.05) {
@@ -1430,6 +1499,7 @@
       timerState.phaseRemaining = 0;
 
       playFinishJingle();
+      announcePhase('FINISHED');
       updateUIPhase();
       updateUIDisplay();
       updateActionBtn();
@@ -1451,7 +1521,7 @@
       const remTotal = document.getElementById('dispRemainingTotal');
       const dispRound = document.getElementById('dispCurrentRound');
       const dispSet = document.getElementById('dispCurrentSet');
-      const ringBar = document.getElementById('progressRingBar');
+      const progressFill = document.getElementById('progressFill');
 
       mainDisplay.textContent = formatSecondsToMMSS(timerState.phaseRemaining);
       remTotal.textContent = formatSecondsToMMSS(timerState.totalRemaining);
@@ -1459,14 +1529,14 @@
       dispRound.textContent = `${timerState.currentRound} / ${settings.totalRounds}`;
       dispSet.textContent = `${timerState.currentSet} / ${settings.totalSets}`;
 
-      const circumference = 2 * Math.PI * 118; // 741.41
-      if (timerState.phaseDuration > 0) {
-        const fraction = Math.max(0, timerState.phaseRemaining / timerState.phaseDuration);
-        const offset = circumference * (1 - fraction);
-        ringBar.style.strokeDasharray = `${circumference}`;
-        ringBar.style.strokeDashoffset = `${offset}`;
-      } else {
-        ringBar.style.strokeDashoffset = '0';
+      // Inline progress bar
+      if (progressFill) {
+        if (timerState.phaseDuration > 0) {
+          const fraction = Math.max(0, timerState.phaseRemaining / timerState.phaseDuration);
+          progressFill.style.width = `${fraction * 100}%`;
+        } else {
+          progressFill.style.width = '100%';
+        }
       }
     }
 
